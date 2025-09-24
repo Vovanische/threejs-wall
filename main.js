@@ -2,7 +2,6 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GUI } from "three/addons/libs/lil-gui.module.min.js";
 
-// 1. НАСТРОЙКА СЦЕНЫ
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xcccccc);
 
@@ -21,14 +20,12 @@ document.body.appendChild(renderer.domElement);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 
-// 2. ОСВЕЩЕНИЕ
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
 scene.add(ambientLight);
 const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
 directionalLight.position.set(5, 10, 7);
 scene.add(directionalLight);
 
-// 3. КОНСТАНТЫ (размеры/толщины/высоты)
 const WALL_HEIGHT = 1;
 const WALL_LENGTH = 1;
 const WALL_WIDTH = 0.1;
@@ -50,7 +47,6 @@ const CONCRETE_WIDTH = 0.3;
 const CONCRETE_HEIGHT = 0.2;
 const CONCRETE_LENGTH = 1;
 
-// 4. ТЕКСТУРЫ И МАТЕРИАЛЫ
 const textureLoader = new THREE.TextureLoader();
 
 const brickColorTexture = textureLoader.load(
@@ -109,22 +105,6 @@ const groundAOTexture = textureLoader.load(
   "./assets/textures/Ground_Dirt_008_ambientOcclusion.jpg"
 );
 
-// Повторение текстур
-// brickTexture.wrapS = brickTexture.wrapT = THREE.RepeatWrapping;
-// brickTexture.repeat.set(3, 3);
-
-// brickNormalTexture.wrapS = brickNormalTexture.wrapT = THREE.RepeatWrapping;
-// brickNormalTexture.repeat.set(3, 3);
-
-// blockColorTexture.wrapS = blockColorTexture.wrapT = THREE.RepeatWrapping;
-// blockColorTexture.repeat.set(3, 3);
-
-// blockNormalTexture.wrapS = blockNormalTexture.wrapT = THREE.RepeatWrapping;
-// blockNormalTexture.repeat.set(3, 3);
-
-// blockAOTexture.wrapS = blockAOTexture.wrapT = THREE.RepeatWrapping;
-// blockAOTexture.repeat.set(3, 3);
-
 const insulationMaterials = [
   new THREE.MeshStandardMaterial({ color: "#808080" }), // +X — серая (к кирпичу)
   new THREE.MeshStandardMaterial({ color: "#ff80ab" }), // -X
@@ -163,7 +143,6 @@ const materials = {
   }),
 };
 
-// Внешняя стена (кирпич — треугольная экструзия)
 const triangleShape = new THREE.Shape();
 triangleShape.moveTo(0, 0);
 triangleShape.lineTo(0, WALL_HEIGHT);
@@ -191,7 +170,6 @@ const outerWallGroup = new THREE.Group();
 const outerWall = new THREE.Mesh(brickWallGeometry, materials.brick);
 outerWallGroup.add(outerWall);
 
-// Красный слой (отдельный элемент)
 const redLayer = new THREE.Mesh(
   new THREE.BoxGeometry(
     RED_LAYER_MIN_WIDTH,
@@ -205,7 +183,6 @@ redLayer.position.y =
   -(WALL_HEIGHT - RED_LAYER_HEIGHT) / 2 + FOUNDATION_HEIGHT / 2;
 scene.add(redLayer);
 
-// Прямоугольник у земли для кирпичной группы
 const groundRect = new THREE.Mesh(
   new THREE.BoxGeometry(GROUND_WIDTH, GROUND_HEIGHT, GROUND_LENGTH),
   materials.ground
@@ -220,7 +197,6 @@ groundRect.position.set(
 outerWallGroup.add(groundRect);
 scene.add(outerWallGroup);
 
-// Внутренняя стена (блоки)
 const innerWallGroup = new THREE.Group();
 const innerWall = new THREE.Mesh(
   new THREE.BoxGeometry(WALL_WIDTH, WALL_HEIGHT, WALL_LENGTH),
@@ -256,7 +232,6 @@ concreteRectLight.position.set(
 innerWallGroup.add(concreteRectLight);
 scene.add(innerWallGroup);
 
-// Утеплитель (отдельный элемент)
 const insulation = new THREE.Mesh(
   new THREE.BoxGeometry(1, WALL_HEIGHT - FOUNDATION_HEIGHT, WALL_LENGTH), // Ширина (X) будет меняться через scale
   materials.insulation
@@ -265,7 +240,6 @@ const insulation = new THREE.Mesh(
 insulation.position.y = FOUNDATION_HEIGHT / 2;
 scene.add(insulation);
 
-// Фундамент
 const foundation = new THREE.Mesh(
   new THREE.BoxGeometry(),
   materials.foundation
@@ -280,21 +254,17 @@ const params = {
 };
 
 function updateWallLayout() {
-  // Текущие толщины
   const insulationWidth = params.insulationWidth;
   const redLayerWidth = params.redLayerWidth;
   const brickWidth = BRICK_WIDTH;
   const wallWidth = WALL_WIDTH;
 
-  // Масштабируем изменяемые слои
   insulation.scale.x = insulationWidth;
   redLayer.scale.x = redLayerWidth / RED_LAYER_MIN_WIDTH;
 
-  // Общая ширина и левый край для центрирования компоновки вокруг X=0
   const totalWidth = wallWidth + insulationWidth + redLayerWidth + brickWidth;
   const leftEdge = -totalWidth / 2;
 
-  // Центры элементов (слева направо: блок → insulation → redLayer → кирпич)
   const innerWallCenterX = leftEdge + wallWidth / 2;
   const insulationCenterX = leftEdge + wallWidth + insulationWidth / 2;
   const redLayerCenterX =
@@ -302,13 +272,11 @@ function updateWallLayout() {
   const outerWallCenterX =
     leftEdge + wallWidth + insulationWidth + redLayerWidth + brickWidth / 2;
 
-  // Применяем позиции
   innerWallGroup.position.x = innerWallCenterX;
   insulation.position.x = insulationCenterX;
   redLayer.position.x = redLayerCenterX;
   outerWallGroup.position.x = outerWallCenterX;
 
-  // Фундамент под redLayer и insulation
   foundation.geometry.dispose();
   foundation.geometry = new THREE.BoxGeometry(
     insulationWidth + redLayerWidth,
@@ -318,7 +286,6 @@ function updateWallLayout() {
   foundation.position.x = 0;
 }
 
-// GUI
 const gui = new GUI();
 gui
   .add(
@@ -335,9 +302,7 @@ gui
   .name("Red layer width")
   .onChange(updateWallLayout);
 
-// Первый вызов для установки начальных позиций
 updateWallLayout();
-
 
 function animate() {
   requestAnimationFrame(animate);
@@ -345,7 +310,6 @@ function animate() {
   renderer.render(scene, camera);
 }
 
-// Адаптация под размер окна
 window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
